@@ -1,4 +1,4 @@
-name: Docker publish
+name: Docker publish to docker hub
 
 on:
   push:
@@ -38,11 +38,12 @@ jobs:
         with:
           driver: docker-container
           driver-opts: network=host
+
       - uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - run: cd .. && make patch
 
@@ -59,7 +60,7 @@ jobs:
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ env.tag }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/${{ github.repository }}/harbor-${{ matrix.component }}-base:${{ env.tag }}
+          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/harbor-${{ matrix.component }}-base:${{ env.tag }}
 
   docker-image:
     needs:
@@ -107,17 +108,17 @@ jobs:
 
       - uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - id: prepare
         run: echo "tag=$(cat ../version)" >> $GITHUB_ENV
 
       - name: Build & Publish images
         env:
-          IMAGENAMESPACE: ghcr.io/${{ github.repository }}
-          BASEIMAGENAMESPACE: ghcr.io/${{ github.repository }}
+          IMAGENAMESPACE: docker.io/${{ secrets.DOCKER_USERNAME }}
+          BASEIMAGENAMESPACE: docker.io/${{ secrets.DOCKER_USERNAME }}
           IMAGELABELS: org.opencontainers.image.source=https://github.com/${{ github.repository }}
           MULTIARCH: true
           TRIVYFLAG: true
